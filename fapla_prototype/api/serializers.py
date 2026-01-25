@@ -1,0 +1,121 @@
+from rest_framework import serializers
+from .models import Household, Membership, Task, Responsibility
+from django.contrib.auth.models import User
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = (
+            'id',
+            'username',
+            'last_login',
+        )
+
+class RegisterSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('username', 'email', 'password')
+        extra_kwargs = {'password': {'write_only': True}}
+
+    def create(self, validated_data):
+        user = User.objects.create_user(**validated_data)
+        return user
+
+class UserSerializer_short(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = (
+            'id',
+            'username',
+        )
+
+class MembershipSerializer(serializers.ModelSerializer):
+    #member = UserSerializer_short(read_only=True)
+    member_name = serializers.CharField(source='member.username')
+    member_id = serializers.IntegerField(source='member.id')
+    class Meta:
+        model = Membership
+        fields = (
+            'member_id',
+            'member_name',
+            'joined_at',
+            'inviter',
+            )
+
+class HouseholdSerializer(serializers.ModelSerializer):
+    members = MembershipSerializer(source='memberships', many=True, read_only=True)
+    class Meta:
+        model = Household
+        fields = (
+            'id',
+            'name',
+            'created_at',
+            'creator',
+            'members',
+        )
+
+# Serializer for Household Post Reqs
+class HouseholdCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Household
+        fields = (
+            'name',
+        )
+
+
+# basic serializer for tasks
+class TaskSerializer(serializers.ModelSerializer):
+    executors = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = Task
+        fields = [
+            "id",
+            "name",
+            "description",
+            "finished",
+            "due_by",
+            "type",
+            "scope",
+            "created_at",
+            "executors",
+        ]
+        read_only_fields = ["created_at", "executors"]
+
+    # gets the relevant info on executors
+    def get_executors(self, obj):
+        return [
+            {
+                "id": r.executor.id,
+                "username": r.executor.username,
+                "accepted_at": r.accepted_at,
+            }
+            for r in obj.responsibilities.select_related("executor")
+        ]
+
+    # Checks if the task's scope is a household, that the user is member of(scope=blank ok => personal task)
+    def validate_scope(self, scope):
+        user = self.context["request"].user
+
+        if scope is None:
+            return scope
+
+        is_member = scope.members.filter(id=user.id).exists()
+        if not is_member:
+            raise serializers.ValidationError(
+                "You are not a member of this household."
+            )
+
+        return scope
+    
+    # if its a POST req, add user for created_by
+    def create(self, validated_data):
+        validated_data["created_by"] = self.context["request"].user
+        return super().create(validated_data)
+    
+# serializer for responsibility
+class ResponsibilitySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Responsibility
+        fields = ["id", "task", "executor", "accepted_at"]
+        read_only_fields = ["executor", "accepted_at"]

@@ -1,0 +1,65 @@
+### LOGIN ADMIN USER
+# @name login_admin
+POST http://127.0.0.1:8000/api/auth/login/ HTTP/1.1
+Content-Type: application/json
+
+{
+    "username": "admin",
+    "password": "test"
+}
+
+### REFRESH ADMIN USER LOGIN
+# @name login_refresh_admin
+POST http://127.0.0.1:8000/api/auth/refresh/ HTTP/1.1
+Content-Type: application/json
+
+{
+    "refresh": "{{login_admin.response.body.refresh}}"
+}
+
+
+### REGISTER NEW USER
+# @name register_user
+POST http://127.0.0.1:8000/api/auth/register/ HTTP/1.1
+Content-Type: application/json
+
+{
+    "username": "test1",
+    "email": "test@test.mail",
+    "password": "test1"
+}
+
+### LOGIN WITH REGISTERED USER
+POST http://127.0.0.1:8000/api/auth/login/ HTTP/1.1
+Content-Type: application/json
+
+{
+    "username": "test1",
+    "password": "test1"
+}
+
+
+### Return all households
+GET http://127.0.0.1:8000/households/ HTTP/1.1
+
+
+### Post a new Household for a logged in user
+POST http://127.0.0.1:8000/my-households/ HTTP/1.1
+Content-Type: application/json
+Authorization: Bearer {{login_admin.response.body.access}}
+
+{
+    "name": "Test123"
+}
+
+
+### Change a given household's name for a logged in user
+PUT http://127.0.0.1:8000/households/16/ HTTP/1.1
+Content-Type: application/json
+Authorization: Bearer {{login_admin.response.body.access}}
+
+{
+    "name": "HomeNew1"
+}
+
+### 
