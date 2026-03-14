@@ -32,7 +32,7 @@ class List(models.Model):
         return self.name
     
 
-# TODO Recurring TASKS?
+# Task model TODO Recurring TASKS?
 class Task(models.Model):
     name = models.CharField(max_length=200)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -41,7 +41,7 @@ class Task(models.Model):
     finished = models.BooleanField(default=False) # false = task not done yet
     due_by = models.DateTimeField(blank=True, null=True) # optional due date
     scope = models.ForeignKey(Household, on_delete=models.SET_NULL, blank=True, null=True)# denotes the household it belongs to. If none -> personal task
-    type = models.CharField(max_length=200, default="") # type=SHOPPING to denote shopping tasks. Implement in frontend sth like defaults(shopping, chore, cooking) vs other->string input!
+    type = models.CharField(max_length=200, default="") # Still needed now that I have Shopping Item? Maybe Delete later??
     executors = models.ManyToManyField(User, through="Responsibility", through_fields=("task", "executor"),) # users that have accepted this task as their responsibility
 
     def __str__(self):
@@ -55,6 +55,21 @@ class Responsibility(models.Model):
 
     def __str__(self):
         return f"{self.task.name} X {self.executor.username}"
+
+# Separate from "normal" Tasks for their unique fields(amount,unit,brand,store) and removing type, dueby and executors
+class ShoppingItem(models.Model):
+    name = models.CharField(max_length=200)
+    created_at = models.DateTimeField(auto_now_add=True)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True, related_name="item_creator",)
+    description = models.TextField()
+    bought = models.BooleanField(default=False) # false = task not done yet
+    scope = models.ForeignKey(Household, on_delete=models.SET_NULL, blank=True, null=True)# denotes the household it belongs to. If none -> personal task
+
+    amount = models.CharField(max_length=150)
+    # amount = models.FloatField(null=True, blank=True)
+    # unit = models.CharField(max_length=50, blank=True) # TODO maybe do an enum with fixed options instead? ml, gram, pack, bottle,... ?
+    preferred_brand = models.CharField(max_length=200, blank=True)
+    store = models.CharField(max_length=200, blank=True)
 
 # TODO Unfinished placeholder, do not implement in frontend yet!!!
 class Recipe(models.Model):

@@ -78,9 +78,10 @@ class TaskSerializer(serializers.ModelSerializer):
             "type",
             "scope",
             "created_at",
+            "created_by",
             "executors",
         ]
-        read_only_fields = ["created_at", "executors"]
+        read_only_fields = ["created_by", "created_at", "executors"]
 
     # gets the relevant info on executors
     def get_executors(self, obj):
@@ -119,3 +120,30 @@ class ResponsibilitySerializer(serializers.ModelSerializer):
         model = Responsibility
         fields = ["id", "task", "executor", "accepted_at"]
         read_only_fields = ["executor", "accepted_at"]
+
+
+
+# for the frontend to query about a logged in user's info
+class MeSerializer(serializers.ModelSerializer):
+    households = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = [
+            "id",
+            "username",
+            "email",
+            "households",
+        ]
+
+    def get_households(self, obj):
+        memberships = Membership.objects.select_related("household").filter(member=obj)
+
+        return [
+            {
+                "id": m.household.id,
+                "name": m.household.name,
+                "joined_at": m.joined_at,
+            }
+            for m in memberships
+        ]

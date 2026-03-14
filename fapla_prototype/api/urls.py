@@ -9,6 +9,7 @@ urlpatterns = [
     path("tasks/", views.TaskListCreateView.as_view()),
     path("tasks/<int:pk>/", views.TaskDetailView.as_view()),
     path("tasks/<int:task_id>/responsibility/", views.TaskResponsibilityView.as_view()),
+    path("auth/me/", views.MeView.as_view(), name="auth_me"),
 
     # TODO DELETE OR RESTRICT TO ADMIN
     path('users/', views.UsersListAPIView.as_view()),

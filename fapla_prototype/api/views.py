@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from django.db.models import Q
-from .serializers import HouseholdSerializer, UserSerializer, RegisterSerializer, TaskSerializer
+from .serializers import HouseholdSerializer, UserSerializer, RegisterSerializer, TaskSerializer, MeSerializer
 from django.contrib.auth.models import User
 
 from .models import Household, Membership, Task, Responsibility
@@ -58,8 +58,6 @@ class TaskListCreateView(generics.ListCreateAPIView):
     def get_queryset(self):
         return related_tasks_for_user(self.request.user)
     
-    #def perform_create(self, serializer):
-    #    serializer.save(created_by=self.request.user)
 
 # View for UPDATE/DELETE of a specific task
 class TaskDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -115,6 +113,14 @@ class TaskResponsibilityView(APIView):
             )
 
         return Response(status=status.HTTP_204_NO_CONTENT)
+    
+# offers info about the logged in user
+class MeView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        serializer = MeSerializer(request.user)
+        return Response(serializer.data)
 
 
 
