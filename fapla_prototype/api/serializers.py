@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Household, Membership, Task, Responsibility
+from .models import Household, Membership, Task, Responsibility, ShoppingItem
 from django.contrib.auth.models import User
 
 class UserSerializer(serializers.ModelSerializer):
@@ -121,7 +121,45 @@ class ResponsibilitySerializer(serializers.ModelSerializer):
         fields = ["id", "task", "executor", "accepted_at"]
         read_only_fields = ["executor", "accepted_at"]
 
+# basic serializer for ShoppingItems
+class ShoppingItemSerializer(serializers.ModelSerializer):
 
+    class Meta:
+        model = ShoppingItem
+        fields = [
+            "id",
+            "name",
+            "description",
+            "bought",
+            "scope",
+            "created_at",
+            "created_by",
+            "amount",
+            "preferred_brand",
+            "store",
+        ]
+        read_only_fields = ["created_by", "created_at"]
+
+
+    # Checks if the task's scope is a household, that the user is member of(scope=blank ok => personal task)
+    def validate_scope(self, scope):
+        user = self.context["request"].user
+
+        if scope is None:
+            return scope
+
+        is_member = scope.members.filter(id=user.id).exists()
+        if not is_member:
+            raise serializers.ValidationError(
+                "You are not a member of this household."
+            )
+
+        return scope
+    
+    # if its a POST req, add user for created_by
+    def create(self, validated_data):
+        validated_data["created_by"] = self.context["request"].user
+        return super().create(validated_data)
 
 # for the frontend to query about a logged in user's info
 class MeSerializer(serializers.ModelSerializer):
