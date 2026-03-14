@@ -7,10 +7,10 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from django.db.models import Q
-from .serializers import HouseholdSerializer, UserSerializer, RegisterSerializer, TaskSerializer, MeSerializer
+from .serializers import HouseholdSerializer, UserSerializer, RegisterSerializer, TaskSerializer, MeSerializer, ShoppingItemSerializer
 from django.contrib.auth.models import User
 
-from .models import Household, Membership, Task, Responsibility
+from .models import Household, Membership, Task, Responsibility, ShoppingItem
 from .filters import HouseholdFilter
 
 
@@ -114,6 +114,23 @@ class TaskResponsibilityView(APIView):
 
         return Response(status=status.HTTP_204_NO_CONTENT)
     
+# GET/POST of ShoppingItems. GET returns all tasks a logged in user is related to(both personal and household tasks)
+class ShoppingItemListCreateView(generics.ListCreateAPIView):
+    serializer_class = ShoppingItemSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return related_shoppingItems_for_user(self.request.user)
+    
+
+# View for UPDATE/DELETE of a specific shopping item
+class ShoppingItemDetailView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = ShoppingItemSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return related_shoppingItems_for_user(self.request.user)
+    
 # offers info about the logged in user
 class MeView(APIView):
     permission_classes = [IsAuthenticated]
@@ -154,6 +171,17 @@ def related_tasks_for_user(user):
     ).values_list("id", flat=True)
 
     return Task.objects.filter(
+        Q(scope__in=household_ids) |
+        Q(scope__isnull=True, created_by=user)
+    ).distinct()
+
+# same as above for shopping items
+def related_shoppingItems_for_user(user):
+    household_ids = Household.objects.filter(
+        members=user
+    ).values_list("id", flat=True)
+
+    return ShoppingItem.objects.filter(
         Q(scope__in=household_ids) |
         Q(scope__isnull=True, created_by=user)
     ).distinct()
