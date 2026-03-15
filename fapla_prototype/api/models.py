@@ -37,7 +37,7 @@ class Task(models.Model):
     name = models.CharField(max_length=200)
     created_at = models.DateTimeField(auto_now_add=True)
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True, related_name="task_creator",)
-    description = models.TextField()
+    description = models.TextField(blank=True, null=True)
     finished = models.BooleanField(default=False) # false = task not done yet
     due_by = models.DateTimeField(blank=True, null=True) # optional due date
     scope = models.ForeignKey(Household, on_delete=models.SET_NULL, blank=True, null=True)# denotes the household it belongs to. If none -> personal task
@@ -61,15 +61,15 @@ class ShoppingItem(models.Model):
     name = models.CharField(max_length=200)
     created_at = models.DateTimeField(auto_now_add=True)
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True, related_name="item_creator",)
-    description = models.TextField()
+    description = models.TextField(blank=True, null=True)
     bought = models.BooleanField(default=False) # false = task not done yet
     scope = models.ForeignKey(Household, on_delete=models.SET_NULL, blank=True, null=True)# denotes the household it belongs to. If none -> personal task
 
-    amount = models.CharField(max_length=150)
+    amount = models.CharField(max_length=150, blank=True, null=True)
     # amount = models.FloatField(null=True, blank=True)
     # unit = models.CharField(max_length=50, blank=True) # TODO maybe do an enum with fixed options instead? ml, gram, pack, bottle,... ?
-    preferred_brand = models.CharField(max_length=200, blank=True)
-    store = models.CharField(max_length=200, blank=True)
+    preferred_brand = models.CharField(max_length=200, blank=True, null=True)
+    store = models.CharField(max_length=200, blank=True, null=True)
 
 # TODO Unfinished placeholder, do not implement in frontend yet!!!
 class Recipe(models.Model):
