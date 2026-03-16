@@ -54,6 +54,24 @@ class HouseholdSerializer(serializers.ModelSerializer):
             'members',
         )
 
+    
+    def create(self, validated_data):
+        user = self.context["request"].user
+
+        household = Household.objects.create(
+            creator=user,
+            **validated_data
+        )
+
+        # Add creator as member
+        Membership.objects.create(
+            household=household,
+            member=user,
+            inviter=user,
+        )
+
+        return household
+
 # Serializer for Household Post Reqs
 class HouseholdCreateSerializer(serializers.ModelSerializer):
     class Meta:

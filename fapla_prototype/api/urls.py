@@ -3,7 +3,7 @@ from . import views
 
 urlpatterns = [
     path('my-households/', views.MyHouseholdsListCreateAPIView.as_view()),
-    path('my-households/create/', views.MyHouseholdCreateAPIView.as_view()),
+    path('my-households/create/', views.MyHouseholdCreateAPIView.as_view()), # TODO deprecated
     path('households/<int:pk>/', views.HouseholdDetailAPIView.as_view()),
     path('api/auth/register/', views.RegisterView.as_view(), name='register'),
     path("tasks/", views.TaskListCreateView.as_view()),

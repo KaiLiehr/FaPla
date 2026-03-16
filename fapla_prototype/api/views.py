@@ -30,6 +30,8 @@ class MyHouseholdsListCreateAPIView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         return Household.objects.filter(memberships__member=self.request.user).prefetch_related('memberships__member').distinct()
+
+
     
 # Allow a logged in user to create a new household with itself as member and creator TODO DEPRECATED BY LISTCREATE!!!!!!!!
 class MyHouseholdCreateAPIView(generics.CreateAPIView):

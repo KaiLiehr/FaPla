@@ -23,6 +23,9 @@ class Membership(models.Model):
 
     def __str__(self):
         return f"{self.household.name} X {self.member.username}"
+    
+    class Meta:
+        unique_together = ("household", "member")
 
 # TODO DEPRECATE??? or replace by grouping? 
 class List(models.Model):
