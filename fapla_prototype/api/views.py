@@ -118,7 +118,16 @@ class MembershipView(APIView):
         if not membership:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
+        household = membership.household
 
+        # Count members BEFORE deleting
+        member_count = household.memberships.count()
+        
+        # If last member → delete entire household, membership gets deleted via cascade
+        if member_count == 1:
+            household.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+    
         membership.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
     
