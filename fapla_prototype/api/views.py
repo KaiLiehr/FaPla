@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from django.db.models import Q
-from .serializers import HouseholdSerializer, UserSerializer, RegisterSerializer, TaskSerializer, MeSerializer, ShoppingItemSerializer
+from .serializers import HouseholdSerializer, UserSerializer, RegisterSerializer, TaskSerializer, MeSerializer, ShoppingItemSerializer, MembershipSerializer
 from django.contrib.auth.models import User
 
 from .models import Household, Membership, Task, Responsibility, ShoppingItem
@@ -50,6 +50,77 @@ class HouseholdDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Household.objects.all()
     serializer_class = HouseholdSerializer
     permission_classes = [IsAuthenticated]
+
+# membership endpoint for household invitation and leave
+class MembershipView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    # Invite user to household
+    def post(self, request):
+        user = request.user
+        household_id = request.data.get("household")
+        username = request.data.get("username")
+
+        if not household_id or not username:
+            return Response(
+                {"detail": "household and username required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        household = Household.objects.filter(id=household_id).first()
+        if not household:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        # Only members can invite
+        is_member = Membership.objects.filter(
+            household=household,
+            member=user
+        ).exists()
+
+        if not is_member:
+            return Response(
+                {"detail": "You are not a member of this household"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        invited_user = User.objects.filter(username=username).first()
+        if not invited_user:
+            return Response(
+                {"detail": "User not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        membership, created = Membership.objects.get_or_create(
+            household=household,
+            member=invited_user,
+            defaults={"inviter": user}
+        )
+
+        if not created:
+            return Response(
+                {"detail": "User is already a member"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        return Response(
+            MembershipSerializer(membership).data,
+            status=status.HTTP_201_CREATED)
+
+    # Leave household
+    def delete(self, request, household_id):
+        user = request.user
+
+        membership = Membership.objects.filter(
+            household_id=household_id,
+            member=user
+        ).first()
+
+        if not membership:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+
+        membership.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
     
 
 # GET/POST of tasks. GET returns all tasks a logged in user is related to(both personal and household tasks)
@@ -68,6 +139,9 @@ class TaskDetailView(generics.RetrieveUpdateDestroyAPIView):
 
     def get_queryset(self):
         return related_tasks_for_user(self.request.user)
+
+
+
 
 
 # POST/DELETE of own responsibility for a given task. Allows a user to take/give up his own responisbility for a task (personal or household).
