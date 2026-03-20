@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from django.db.models import Q
-from .serializers import HouseholdSerializer, UserSerializer, RegisterSerializer, TaskSerializer, MeSerializer, ShoppingItemSerializer, MembershipSerializer
+from .serializers import HouseholdSerializer, UserSerializer, RegisterSerializer, TaskSerializer, MeSerializer, ShoppingItemSerializer, MembershipSerializer, UserSearchSerializer
 from django.contrib.auth.models import User
 
 from .models import Household, Membership, Task, Responsibility, ShoppingItem
@@ -20,6 +20,14 @@ class RegisterView(generics.CreateAPIView):
     serializer_class = RegisterSerializer
     permission_classes = []
 
+# For getting user id for household invitations
+class UserSearchView(generics.ListAPIView):
+    serializer_class = UserSearchSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        query = self.request.query_params.get("search", "")
+        return User.objects.filter(username__icontains=query)[:10]
 
 # Returns a user's households
 class MyHouseholdsListCreateAPIView(generics.ListCreateAPIView):
@@ -59,9 +67,9 @@ class MembershipView(APIView):
     def post(self, request):
         user = request.user
         household_id = request.data.get("household")
-        username = request.data.get("username")
+        user_id = request.data.get("user_id")
 
-        if not household_id or not username:
+        if not household_id or not user_id:
             return Response(
                 {"detail": "household and username required"},
                 status=status.HTTP_400_BAD_REQUEST
@@ -69,7 +77,7 @@ class MembershipView(APIView):
 
         household = Household.objects.filter(id=household_id).first()
         if not household:
-            return Response(status=status.HTTP_404_NOT_FOUND)
+            return Response({"detail": "household does not exist"},status=status.HTTP_404_NOT_FOUND)
 
         # Only members can invite
         is_member = Membership.objects.filter(
@@ -82,20 +90,23 @@ class MembershipView(APIView):
                 {"detail": "You are not a member of this household"},
                 status=status.HTTP_403_FORBIDDEN
             )
-
-        invited_user = User.objects.filter(username=username).first()
+        
+        # user needs to exist
+        invited_user = User.objects.filter(id=user_id).first()
         if not invited_user:
             return Response(
                 {"detail": "User not found"},
                 status=status.HTTP_404_NOT_FOUND
             )
 
+        # create the membership
         membership, created = Membership.objects.get_or_create(
             household=household,
             member=invited_user,
             defaults={"inviter": user}
         )
 
+        # If not created, user must already be a member
         if not created:
             return Response(
                 {"detail": "User is already a member"},

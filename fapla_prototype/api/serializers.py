@@ -11,6 +11,12 @@ class UserSerializer(serializers.ModelSerializer):
             'last_login',
         )
 
+# for user search in case of household invitation
+class UserSearchSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ("id", "username")
+
 class RegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
