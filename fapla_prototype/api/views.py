@@ -53,11 +53,7 @@ class MyHouseholdCreateAPIView(generics.CreateAPIView):
 
 
 
-# Allows a specific household to be displayed in detail, updated, or deleted given its key TODO restrict member only, restrict deletion to last member only
-class HouseholdDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Household.objects.all()
-    serializer_class = HouseholdSerializer
-    permission_classes = [IsAuthenticated]
+
 
 # membership endpoint for household invitation and leave
 class MembershipView(APIView):
@@ -237,23 +233,27 @@ class MeView(APIView):
 
 
 
-# --------------------UNFINISHED/NOT FOR PROD VIEWS----------------------
+# --------------------UNFINISHED/DEPRECATED/NOT FOR PROD VIEWS----------------------
 
-# TODO Recipe listview with queryset = Recipe.objects.filter(public=True) to show all public recipes
+# TODO Recipe listview with queryset = Recipe.objects.filter(public=True) to show all public recipes ?
 
+# Allows a specific household to be displayed in detail, updated, or deleted given its key TODO restrict member only, restrict deletion to last member only
+#class HouseholdDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
+#    queryset = Household.objects.all()
+#    serializer_class = HouseholdSerializer
+#    permission_classes = [IsAuthenticated]
 
+# Returns all users
+#class UsersListAPIView(generics.ListAPIView):
+#    queryset = User.objects.all()
+#    serializer_class = UserSerializer
+#    filterset_fields = ('username')
 
-# Returns all users TODO DELETE PRIOR TO PRODUCTION!!!!!!!!!!!!
-class UsersListAPIView(generics.ListAPIView):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
-    filterset_fields = ('username')
-
-# Returns all households TODO  DELETE PRIOR TO PRODUCTION!!!!!!!!!!!!
-class HouseholdListAPIView(generics.ListAPIView):
-    queryset = Household.objects.prefetch_related('memberships__member')
-    serializer_class = HouseholdSerializer
-    filterset_class = HouseholdFilter
+# Returns all households
+#class HouseholdListAPIView(generics.ListAPIView):
+#    queryset = Household.objects.prefetch_related('memberships__member')
+#    serializer_class = HouseholdSerializer
+#    filterset_class = HouseholdFilter
 
 
 
