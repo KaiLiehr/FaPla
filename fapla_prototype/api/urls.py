@@ -7,7 +7,7 @@ urlpatterns = [
     path('memberships/', views.MembershipView.as_view()),  # POST (invite)
     path('memberships/<int:household_id>/', views.MembershipView.as_view()),  # DELETE (leave)
     path('users/search/', views.UserSearchView.as_view()), # for getting id of a user for household invitation
-    path('api/auth/register/', views.RegisterView.as_view(), name='register'),
+    path('auth/register/', views.RegisterView.as_view(), name='register'),
     path("tasks/", views.TaskListCreateView.as_view()),
     path("tasks/<int:pk>/", views.TaskDetailView.as_view()),
     path("tasks/<int:task_id>/responsibility/", views.TaskResponsibilityView.as_view()),
