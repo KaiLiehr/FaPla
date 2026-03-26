@@ -11,6 +11,6 @@ import os
 
 from django.core.wsgi import get_wsgi_application
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'fapla_prototype.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'fapla_prototype.fapla_prototype.settings')
 
 application = get_wsgi_application()
