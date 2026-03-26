@@ -2,7 +2,7 @@
 # exit on error
 set -o errexit
 
-cd fapla_prototype
+# cd fapla_prototype
 
 pip install -r requirements.txt
 
