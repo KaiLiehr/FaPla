@@ -2,6 +2,8 @@
 # exit on error
 set -o errexit
 
+cd fapla_prototype
+
 pip install -r requirements.txt
 
 python manage.py migrate
