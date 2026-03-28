@@ -5,10 +5,12 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from django.db.models import Q
 from .serializers import HouseholdSerializer, UserSerializer, RegisterSerializer, TaskSerializer, MeSerializer, ShoppingItemSerializer, MembershipSerializer, UserSearchSerializer
 from django.contrib.auth.models import User
+from django.contrib.auth import authenticate
 
 from .models import Household, Membership, Task, Responsibility, ShoppingItem
 from .filters import HouseholdFilter
@@ -20,6 +22,34 @@ class RegisterView(generics.CreateAPIView):
     serializer_class = RegisterSerializer
     permission_classes = []
 
+# view for logging via email as opposed to default with username
+class EmailLoginView(APIView):
+    permission_classes = []
+
+    def post(self, request):
+        email = request.data.get("email")
+        password = request.data.get("password")
+
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            return Response({"error": "Invalid credentials"}, status=400)
+
+        user = authenticate(username=user.username, password=password)
+
+        if user is None:
+            return Response({"error": "Invalid credentials"}, status=400)
+
+        #if not user.is_active: Temporarily disabled cause I am not sending any email
+        #    return Response({"error": "Email not verified"}, status=403)
+
+        refresh = RefreshToken.for_user(user)
+
+        return Response({
+            "refresh": str(refresh),
+            "access": str(refresh.access_token),
+        })
+    
 # For getting user id for household invitations
 class UserSearchView(generics.ListAPIView):
     serializer_class = UserSearchSerializer
