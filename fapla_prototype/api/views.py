@@ -35,9 +35,7 @@ class EmailLoginView(APIView):
         except User.DoesNotExist:
             return Response({"error": "Invalid credentials"}, status=400)
 
-        user = authenticate(username=user.username, password=password)
-
-        if user is None:
+        if not user.check_password(password):
             return Response({"error": "Invalid credentials"}, status=400)
 
         #if not user.is_active: Temporarily disabled cause I am not sending any email
